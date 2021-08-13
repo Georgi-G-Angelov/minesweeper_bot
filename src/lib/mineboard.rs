@@ -1,5 +1,6 @@
 use crate::lib::constants::{BOARD_HEIGHT, BOARD_WIDTH, MINE_PERCENTAGE};
 use rand::Rng;
+use std::cmp;
 
 pub struct MineBoard {
     pub matrix : [[i32; BOARD_WIDTH]; BOARD_HEIGHT]
@@ -13,7 +14,6 @@ struct Field {
 impl MineBoard {
 
     pub(crate) fn place_mines(&mut self, x: u8, y: u8) {
-        print!("penis: {}, {}", x, y);
         let number_of_mines = BOARD_HEIGHT * BOARD_WIDTH * MINE_PERCENTAGE as usize / 100;
         let mut fields: Vec<Field> = Vec::new();
 
@@ -32,17 +32,36 @@ impl MineBoard {
         let mut rng = rand::thread_rng();
         for _i in 0..number_of_mines {
             let field_index = rng.gen_range(0..fields.len());
-            println!("{}, {}", unsafe { fields.get_unchecked(field_index) }.x,
-                     unsafe { fields.get_unchecked(field_index) }.y);
             let field = fields.get(field_index).unwrap();
-            self.matrix[field.x as usize][field.y as usize] = -1;
+            self.matrix[field.y as usize][field.x as usize] = -1;
             fields.remove(field_index);
+        }
+
+        // Fill field values around mines
+        for i in 0..BOARD_WIDTH {
+            for j in 0..BOARD_HEIGHT {
+                if self.matrix[j][i] == 0 {
+                    let lower_x_range = cmp::max(0, i as i8 - 1);
+                    let upper_x_range = cmp::min(BOARD_WIDTH as i8, i as i8 + 2);
+                    let lower_y_range = cmp::max(0, j as i8 - 1);
+                    let upper_y_range = cmp::min(BOARD_HEIGHT as i8, j as i8 + 2);
+                    let mut mine_number = 0;
+                    for x in lower_x_range..upper_x_range {
+                        for y in lower_y_range..upper_y_range {
+                            if self.matrix[y as usize][x as usize] == -1 {
+                                mine_number+=1;
+                            }
+                        }
+                    }
+                    self.matrix[j][i] = mine_number;
+                }
+            }
         }
     }
 
     pub(crate) fn print(&mut self) {
-        for i in 0..BOARD_WIDTH {
-            for j in 0..BOARD_HEIGHT {
+        for i in 0..BOARD_HEIGHT {
+            for j in 0..BOARD_WIDTH {
                 if self.matrix[i as usize][j as usize] != -1 {
                     print!(" ")
                 }
@@ -56,7 +75,7 @@ impl MineBoard {
 impl Default for MineBoard {
     fn default() -> Self {
         MineBoard {
-            matrix: [[0;BOARD_HEIGHT];BOARD_WIDTH]
+            matrix: [[0;BOARD_WIDTH];BOARD_HEIGHT]
         }
     }
 }
