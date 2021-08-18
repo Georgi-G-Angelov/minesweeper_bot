@@ -1,6 +1,6 @@
 use crate::lib::constants::{BOARD_HEIGHT, BOARD_WIDTH, MINE_PERCENTAGE};
 use rand::Rng;
-use std::cmp;
+use std::{cmp, io};
 
 pub struct MineBoard {
     pub matrix : [[i32; BOARD_WIDTH]; BOARD_HEIGHT]
@@ -69,6 +69,20 @@ impl MineBoard {
             }
             println!();
         }
+    }
+
+    pub(crate) fn mark(&mut self) -> bool {
+        let mut command = String::new();
+        io::stdin()
+            .read_line(&mut command)
+            .expect("failed to read from stdin");
+
+        if command.eq("mark") {
+
+        } else if command.eq("uncover") {
+
+        }
+        return false;
     }
 }
 

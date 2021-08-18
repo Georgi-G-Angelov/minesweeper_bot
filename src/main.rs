@@ -1,25 +1,24 @@
 mod lib {
     pub(crate) mod mineboard;
     mod constants;
+    pub(crate) mod util;
 }
 
 use crate::lib::mineboard::MineBoard;
-use std::io;
-
+use crate::lib::util::read_int;
 
 fn main() {
     let mut board: MineBoard = MineBoard{..Default::default()};
 
-    let mut input_text = String::new();
-    io::stdin()
-        .read_line(&mut input_text)
-        .expect("failed to read from stdin");
+    let x = read_int();
+    let y = read_int();
 
-    let x = input_text.trim().parse::<i32>().unwrap();
+    board.place_mines(x, y);
 
-    println!("{}", x);
-
-
-    board.place_mines(0, 0);
-    board.print();
+    loop {
+        board.print();
+        if board.mark() {
+            break;
+        }
+    }
 }
