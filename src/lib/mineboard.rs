@@ -3,7 +3,8 @@ use rand::Rng;
 use std::{cmp, io};
 
 pub struct MineBoard {
-    pub matrix : [[i32; BOARD_WIDTH]; BOARD_HEIGHT]
+    pub matrix : [[i32; BOARD_WIDTH]; BOARD_HEIGHT],
+    pub hidden : [[bool; BOARD_WIDTH]; BOARD_HEIGHT]
 }
 
 struct Field {
@@ -57,15 +58,42 @@ impl MineBoard {
                 }
             }
         }
+
+        // Uncover fields
+        self.uncover_fields()
+    }
+
+    fn uncover_fields(&mut self) {
+        for i in 0..BOARD_HEIGHT {
+            for j in 0..BOARD_WIDTH {
+                if self.matrix[i][j] == 0 {
+                    self.hidden[i][j] = false;
+                    for x in -1..2 {
+                        for y in -1..2 {
+                            let i1: i16 = i as i16;
+                            let j1: i16 = j as i16;
+                            if i1 + x >= 0 && i1 + x < BOARD_HEIGHT as i16 &&
+                                j1 + y >= 0 && j1 + y < BOARD_WIDTH as i16 {
+                                self.hidden[(i1 + x) as usize][(j1 + y) as usize] = false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     pub(crate) fn print(&mut self) {
         for i in 0..BOARD_HEIGHT {
             for j in 0..BOARD_WIDTH {
-                if self.matrix[i as usize][j as usize] != -1 {
-                    print!(" ")
+                if self.hidden[i as usize][j as usize] {
+                    print!(" x ")
+                } else {
+                    if self.matrix[i as usize][j as usize] != -1 {
+                        print!(" ")
+                    }
+                    print!("{} ", self.matrix[i as usize][j as usize]);
                 }
-                print!("{} ", self.matrix[i as usize][j as usize]);
             }
             println!();
         }
@@ -89,7 +117,8 @@ impl MineBoard {
 impl Default for MineBoard {
     fn default() -> Self {
         MineBoard {
-            matrix: [[0;BOARD_WIDTH];BOARD_HEIGHT]
+            matrix: [[0;BOARD_WIDTH];BOARD_HEIGHT],
+            hidden: [[true; BOARD_WIDTH]; BOARD_HEIGHT]
         }
     }
 }
