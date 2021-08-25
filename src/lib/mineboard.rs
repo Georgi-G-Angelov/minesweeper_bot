@@ -1,10 +1,17 @@
 use crate::lib::constants::{BOARD_HEIGHT, BOARD_WIDTH, MINE_PERCENTAGE};
 use rand::Rng;
 use std::{cmp, io};
+use crate::lib::util::read_int;
 
 pub struct MineBoard {
+    /*
+        hidden:
+        0 - unknown
+        1 - uncovered
+        2 - marked as bomb
+     */
     pub matrix : [[i32; BOARD_WIDTH]; BOARD_HEIGHT],
-    pub hidden : [[bool; BOARD_WIDTH]; BOARD_HEIGHT]
+    pub hidden : [[i8; BOARD_WIDTH]; BOARD_HEIGHT]
 }
 
 struct Field {
@@ -67,14 +74,14 @@ impl MineBoard {
         for i in 0..BOARD_HEIGHT {
             for j in 0..BOARD_WIDTH {
                 if self.matrix[i][j] == 0 {
-                    self.hidden[i][j] = false;
+                    self.hidden[i][j] = 1;
                     for x in -1..2 {
                         for y in -1..2 {
                             let i1: i16 = i as i16;
                             let j1: i16 = j as i16;
                             if i1 + x >= 0 && i1 + x < BOARD_HEIGHT as i16 &&
                                 j1 + y >= 0 && j1 + y < BOARD_WIDTH as i16 {
-                                self.hidden[(i1 + x) as usize][(j1 + y) as usize] = false;
+                                self.hidden[(i1 + x) as usize][(j1 + y) as usize] = 1;
                             }
                         }
                     }
@@ -86,13 +93,15 @@ impl MineBoard {
     pub(crate) fn print(&mut self) {
         for i in 0..BOARD_HEIGHT {
             for j in 0..BOARD_WIDTH {
-                if self.hidden[i as usize][j as usize] {
+                if self.hidden[i as usize][j as usize] == 0 {
                     print!(" x ")
-                } else {
+                } else if self.hidden[i as usize][j as usize] == 1 {
                     if self.matrix[i as usize][j as usize] != -1 {
                         print!(" ")
                     }
                     print!("{} ", self.matrix[i as usize][j as usize]);
+                } else {
+                    print!(" # ")
                 }
             }
             println!();
@@ -105,10 +114,21 @@ impl MineBoard {
             .read_line(&mut command)
             .expect("failed to read from stdin");
 
-        if command.eq("mark") {
+        let y = read_int() as usize;
+        let x = read_int() as usize;
 
-        } else if command.eq("uncover") {
-
+        if command.trim().eq("mark") {
+            if self.hidden[x][y] == 2 {
+                self.hidden[x][y] = 0;
+            } else if self.hidden[x][y] == 0{
+                self.hidden[x][y] = 2;
+            }
+        } else if command.trim().eq("uncover") {
+            if self.matrix[x][y] == -1 {
+                return true;
+            } else {
+                self.hidden[x][y] = 1;
+            }
         }
         return false;
     }
@@ -118,7 +138,7 @@ impl Default for MineBoard {
     fn default() -> Self {
         MineBoard {
             matrix: [[0;BOARD_WIDTH];BOARD_HEIGHT],
-            hidden: [[true; BOARD_WIDTH]; BOARD_HEIGHT]
+            hidden: [[0; BOARD_WIDTH]; BOARD_HEIGHT]
         }
     }
 }
